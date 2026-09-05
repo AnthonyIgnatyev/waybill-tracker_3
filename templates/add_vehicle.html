@@ -1,0 +1,61 @@
+{{define "title"}}Добавить автомобиль — Учёт путевых листов{{end}}
+
+{{define "content"}}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Добавить автомобиль</h1>
+        <div class="page-subtitle">
+            Новый автомобиль в автопарке
+        </div>
+    </div>
+</div>
+
+{{if .Errors}}
+<div class="alert alert-danger">
+    <ul class="error-list">
+        {{range .Errors}}
+        <li>{{.}}</li>
+        {{end}}
+    </ul>
+</div>
+{{end}}
+
+<section class="card">
+    <form method="POST" action="/vehicles/add" class="form-grid">
+        <label>
+            Госномер автомобиля
+            <input type="text" name="license_plate" value="{{.Form.LicensePlate}}" required>
+        </label>
+
+        <label>
+            Марка и модель
+            <input type="text" name="brand_model" value="{{.Form.BrandModel}}">
+        </label>
+
+        <label>
+            Средний расход, л/100км
+            <input type="number" name="avg_consumption" min="0" step="0.1"
+                   value="{{.Form.AvgConsumption}}">
+        </label>
+
+        <label>
+            Текущий пробег, км
+            <input type="number" name="current_mileage" min="0" step="1"
+                   value="{{.Form.CurrentMileage}}">
+            <span class="field-hint">Пробег автомобиля на момент добавления</span>
+        </label>
+
+        <label>
+            Объём бака, л
+            <input type="number" name="tank_capacity" min="0" step="0.1"
+                   value="{{.Form.TankCapacity}}">
+            <span class="field-hint">Полный объём топливного бака</span>
+        </label>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Добавить автомобиль</button>
+            <a class="btn" href="/vehicles">Отмена</a>
+        </div>
+    </form>
+</section>
+{{end}}

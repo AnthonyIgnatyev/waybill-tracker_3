@@ -1,0 +1,64 @@
+{{define "layout"}}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{template "title" .}}</title>
+    <link rel="stylesheet" href="{{asset "style.css"}}">
+</head>
+<body>
+
+<header class="topbar">
+    <div class="topbar-inner">
+        <a class="brand" href="/">
+            <span class="brand-mark">W</span>
+            <span class="brand-text">
+                <span class="brand-title">Учёт путевых листов</span>
+                <span class="brand-sub">Служебный транспорт</span>
+            </span>
+        </a>
+
+        <nav class="nav" id="mainNav">
+            <a href="/" data-nav="exact:/">Дашборд</a>
+            <a href="/waybills" data-nav="prefix:/waybill">Путевые листы</a>
+            <a href="/vehicles" data-nav="prefix:/vehicles">Автомобили</a>
+            <a href="/drivers" data-nav="prefix:/drivers">Водители</a>
+            <a href="/maintenance" data-nav="prefix:/maintenance">ТО</a>
+            <a href="/reports" data-nav="prefix:/reports">Отчёты</a>
+        </nav>
+    </div>
+</header>
+
+<main class="container">
+    {{template "content" .}}
+</main>
+
+<footer class="footer">
+    <div class="footer-inner">
+        <span>Учёт путевых листов · внутренняя система</span>
+    </div>
+</footer>
+
+<script>
+    (function () {
+        const path = window.location.pathname;
+
+        document.querySelectorAll('#mainNav a').forEach(function (link) {
+            const rule = link.getAttribute('data-nav');
+            if (!rule) return;
+
+            const [mode, target] = rule.split(':');
+
+            if (mode === 'exact' && path === target) {
+                link.classList.add('active');
+            } else if (mode === 'prefix' && path.startsWith(target)) {
+                link.classList.add('active');
+            }
+        });
+    })();
+</script>
+
+</body>
+</html>
+{{end}}

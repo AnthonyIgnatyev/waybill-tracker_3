@@ -1,0 +1,164 @@
+{{define "title"}}Техническое обслуживание — Учёт путевых листов{{end}}
+
+{{define "content"}}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Техническое обслуживание</h1>
+        <div class="page-subtitle">
+            Журнал ТО и напоминания по пробегу
+        </div>
+    </div>
+
+    <div class="page-actions">
+        <a class="btn btn-primary" href="/maintenance/add">Добавить запись о ТО</a>
+    </div>
+</div>
+
+<section class="card">
+    <form method="GET" action="/maintenance" class="filters">
+        <div class="filter-field">
+            <label>Автомобиль</label>
+            <select name="vehicle_id">
+                <option value="all">Все</option>
+                {{range .Vehicles}}
+                <option value="{{.ID}}" {{if eq $.VehicleFilter (printf "%d" .ID)}}selected{{end}}>
+                {{.Name}}
+                </option>
+                {{end}}
+            </select>
+        </div>
+
+        <div class="filter-field">
+            <label>Сортировка</label>
+            <select name="sort">
+                <option value="date_desc" {{if eq $.Sort "date_desc"}}selected{{end}}>
+                Сначала новые
+                </option>
+                <option value="date_asc" {{if eq $.Sort "date_asc"}}selected{{end}}>
+                Сначала старые
+                </option>
+                <option value="mileage_desc" {{if eq $.Sort "mileage_desc"}}selected{{end}}>
+                Пробег: по убыванию
+                </option>
+                <option value="mileage_asc" {{if eq $.Sort "mileage_asc"}}selected{{end}}>
+                Пробег: по возрастанию
+                </option>
+                <option value="cost_desc" {{if eq $.Sort "cost_desc"}}selected{{end}}>
+                Стоимость: по убыванию
+                </option>
+                <option value="cost_asc" {{if eq $.Sort "cost_asc"}}selected{{end}}>
+                Стоимость: по возрастанию
+                </option>
+            </select>
+        </div>
+
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">Применить</button>
+            <a class="btn" href="/maintenance">Сбросить</a>
+        </div>
+    </form>
+</section>
+
+{{if .Summary}}
+<section class="card">
+    <h2 class="card-title">Сводка по автомобилю</h2>
+
+    <div class="summary-list">
+        {{range $item, $status := .Summary}}
+        <div class="summary-item">
+            <span>{{$item}}</span>
+            <strong>{{$status}}</strong>
+        </div>
+        {{end}}
+    </div>
+</section>
+{{end}}
+
+<section class="card">
+    <div class="table-wrap">
+        <table>
+            <thead>
+            <tr>
+                <th>Дата</th>
+                <th>Акт №</th>
+                <th>Автомобиль</th>
+                <th>Пробег при ТО</th>
+                <th>Сервис</th>
+                <th>Стоимость</th>
+                <th>Выполненные работы</th>
+                <th>Акт (PDF)</th>
+                <th>Действия</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            {{range .Logs}}
+            <tr>
+                <td>{{.ServiceDate}}</td>
+                <td>{{.ActNumber}}</td>
+                <td>
+                    {{.BrandModel}}
+                    <div class="muted">{{.LicensePlate}}</div>
+                </td>
+                <td>{{.Mileage}} км</td>
+                <td>{{.ServiceName}}</td>
+                <td>{{.Cost}} ₽</td>
+                <td>
+                    <div class="work-list">{{.WorkDone}}</div>
+                </td>
+                <td>
+                    {{if .Attachment}}
+                    <div class="row-actions-inline">
+                        <a class="btn btn-small" href="/maintenance/file?id={{.ID}}" target="_blank">
+                            Открыть
+                        </a>
+                        <a class="btn btn-small" href="/maintenance/file?id={{.ID}}&download=1">
+                            Скачать
+                        </a>
+                    </div>
+                    {{else}}
+                    <span class="muted">—</span>
+                    {{end}}
+                </td>
+                <td>
+                    <a class="btn btn-small" href="/maintenance/edit?id={{.ID}}">Изменить</a>
+                </td>
+            </tr>
+            {{else}}
+            <tr>
+                <td colspan="9">
+                    <div class="empty-state">
+                        Записей о техническом обслуживании пока нет.
+                    </div>
+                </td>
+            </tr>
+            {{end}}
+            </tbody>
+        </table>
+    </div>
+
+    {{if and .Pagination (gt .Pagination.TotalItems 0)}}
+    <div class="pagination">
+        <div class="pagination-info">
+            Показано {{.Pagination.From}}–{{.Pagination.To}}
+            из {{.Pagination.TotalItems}}
+            · Страница {{.Pagination.Page}} из {{.Pagination.TotalPages}}
+        </div>
+
+        <div class="pagination-controls">
+            {{if .Pagination.HasPrev}}
+            <a class="btn btn-small" href="{{.Pagination.PrevURL}}">Назад</a>
+            {{else}}
+            <span class="btn btn-small btn-disabled">Назад</span>
+            {{end}}
+
+            {{if .Pagination.HasNext}}
+            <a class="btn btn-small" href="{{.Pagination.NextURL}}">Вперёд</a>
+            {{else}}
+            <span class="btn btn-small btn-disabled">Вперёд</span>
+            {{end}}
+        </div>
+    </div>
+    {{end}}
+</section>
+{{end}}

@@ -1,0 +1,217 @@
+{{define "title"}}Отчёты — Учёт путевых листов{{end}}
+
+{{define "content"}}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Отчёты</h1>
+        <div class="page-subtitle">
+            Статистика по автомобилям и водителям
+        </div>
+    </div>
+</div>
+
+<section class="card">
+    <form method="GET" action="/reports" class="filters">
+        <div class="filter-field">
+            <label>Месяц</label>
+            <select name="month">
+                {{range .Months}}
+                <option value="{{.value}}" {{if eq $.Month (atoi .value)}}selected{{end}}>
+                    {{.name}}
+                </option>
+                {{end}}
+            </select>
+        </div>
+
+        <div class="filter-field">
+            <label>Год</label>
+            <select name="year">
+                {{range .Years}}
+                <option value="{{.}}" {{if eq $.Year .}}selected{{end}}>
+                    {{.}}
+                </option>
+                {{end}}
+            </select>
+        </div>
+
+        <div class="filter-field checkbox-field">
+            <label class="checkbox">
+                <input type="checkbox" name="all_time" {{if .AllTime}}checked{{end}}>
+                За всё время
+            </label>
+        </div>
+
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">Показать</button>
+            <a class="btn" href="/reports?tab={{.ActiveTab}}">Сбросить</a>
+        </div>
+    </form>
+</section>
+
+<section class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">Путевых листов</div>
+        <div class="stat-value">{{.MonthlyStats.TotalTrips}}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">Общий пробег</div>
+        <div class="stat-value">{{.MonthlyStats.TotalMileage}} км</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">Израсходовано топлива</div>
+        <div class="stat-value">{{printf "%.1f" .MonthlyStats.TotalFuel}} л</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">Затраты на ТО</div>
+        <div class="stat-value">{{printf "%.0f" .MonthlyStats.TotalMaintenance}} ₽</div>
+    </div>
+</section>
+
+<div class="tabs">
+    <a class="tab {{if eq .ActiveTab "vehicles"}}active{{end}}"
+    href="/reports?tab=vehicles&month={{.Month}}&year={{.Year}}{{if .AllTime}}&all_time=on{{end}}">
+    По автомобилям
+    </a>
+
+    <a class="tab {{if eq .ActiveTab "drivers"}}active{{end}}"
+    href="/reports?tab=drivers&month={{.Month}}&year={{.Year}}{{if .AllTime}}&all_time=on{{end}}">
+    По водителям
+    </a>
+
+    <span class="tab-spacer"></span>
+
+    {{if eq .ActiveTab "vehicles"}}
+    <a class="btn btn-small"
+       href="/export/vehicles-report?month={{.Month}}&year={{.Year}}{{if .AllTime}}&all_time=on{{end}}">
+        Экспорт CSV
+    </a>
+    {{end}}
+
+    {{if eq .ActiveTab "drivers"}}
+    <a class="btn btn-small"
+       href="/export/drivers-report?month={{.Month}}&year={{.Year}}{{if .AllTime}}&all_time=on{{end}}">
+        Экспорт CSV
+    </a>
+    {{end}}
+</div>
+
+{{if eq .ActiveTab "vehicles"}}
+<section class="card">
+    <h2 class="card-title">Статистика по автомобилям</h2>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+            <tr>
+                <th>Автомобиль</th>
+                <th>Путевых листов</th>
+                <th>Пробег</th>
+                <th>Топливо</th>
+                <th>Средний расход</th>
+                <th>Норма расхода</th>
+                <th>Затраты на ТО</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            {{range .VehicleReports}}
+            <tr>
+                <td>
+                    <strong>{{.LicensePlate}}</strong>
+                    <div class="muted">{{.BrandModel}}</div>
+                </td>
+                <td>{{.TripsCount}}</td>
+                <td>{{.TotalMileage}} км</td>
+                <td>{{printf "%.1f" .TotalFuel}} л</td>
+                <td>{{printf "%.1f" .AvgConsumption}} л/100км</td>
+                <td>{{printf "%.1f" .NormConsumption}} л/100км</td>
+                <td>{{printf "%.2f" .TotalMaintenance}} ₽</td>
+            </tr>
+            {{else}}
+            <tr>
+                <td colspan="7">
+                    <div class="empty-state">
+                        Нет данных по автомобилям за выбранный период.
+                    </div>
+                </td>
+            </tr>
+            {{end}}
+            </tbody>
+        </table>
+    </div>
+</section>
+{{end}}
+
+{{if eq .ActiveTab "drivers"}}
+<section class="card">
+    <h2 class="card-title">Статистика по водителям</h2>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+            <tr>
+                <th>Водитель</th>
+                <th>Смен отработано</th>
+                <th>Общий пробег</th>
+                <th>Без замечаний</th>
+                <th>С замечаниями</th>
+                <th>% замечаний</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            {{range .DriverReports}}
+            <tr>
+                <td>{{.DriverName}}</td>
+                <td>{{.TripsCount}}</td>
+                <td>{{.TotalMileage}} км</td>
+                <td>
+                    <span class="chip chip-ok">{{.NormalTrips}}</span>
+                </td>
+                <td>
+                    {{if .IssueTrips}}
+                    <span class="chip chip-warning">{{.IssueTrips}}</span>
+                    {{else}}
+                    <span class="chip">{{.IssueTrips}}</span>
+                    {{end}}
+                </td>
+                <td>
+                    {{if .IssueTrips}}
+                    <span class="chip chip-warning">{{printf "%.1f" .IssueRate}}%</span>
+                    {{else}}
+                    <span class="chip chip-ok">{{printf "%.1f" .IssueRate}}%</span>
+                    {{end}}
+                </td>
+            </tr>
+            {{else}}
+            <tr>
+                <td colspan="6">
+                    <div class="empty-state">
+                        Нет данных по водителям за выбранный период.
+                    </div>
+                </td>
+            </tr>
+            {{end}}
+            </tbody>
+        </table>
+    </div>
+</section>
+<script>
+    (function () {
+        var month = document.querySelector('[name="month"]');
+        var year = document.querySelector('[name="year"]');
+        var all = document.querySelector('[name="all_time"]');
+
+        function clearAllTime() {
+            if (all) all.checked = false;
+        }
+
+        if (month) month.addEventListener('change', clearAllTime);
+        if (year) year.addEventListener('change', clearAllTime);
+    })();
+</script>
+{{end}}
+{{end}}

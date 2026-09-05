@@ -1,0 +1,138 @@
+{{define "title"}}Редактирование путевого листа — Учёт путевых листов{{end}}
+
+{{define "content"}}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Редактирование путевого листа № {{.Form.WaybillNumber}}</h1>
+        <div class="page-subtitle">
+            Исправление данных смены
+        </div>
+    </div>
+</div>
+
+{{if .Errors}}
+<div class="alert alert-danger">
+    <ul class="error-list">
+        {{range .Errors}}
+        <li>{{.}}</li>
+        {{end}}
+    </ul>
+</div>
+{{end}}
+
+<section class="card">
+    <form method="POST" action="/waybills/edit" class="form-grid">
+        <input type="hidden" name="id" value="{{.Form.ID}}">
+
+        <label>
+            Номер путевого листа
+            <input type="text" name="waybill_number" value="{{.Form.WaybillNumber}}" required>
+        </label>
+
+        <label>
+            Автомобиль
+            <select name="vehicle_id" required>
+                <option value="">Выберите автомобиль</option>
+                {{range .Vehicles}}
+                <option value="{{.ID}}" {{if eq $.Form.VehicleID (printf "%d" .ID)}}selected{{end}}>
+                {{.Name}}
+                </option>
+                {{end}}
+            </select>
+        </label>
+
+        <label>
+            Дата открытия
+            <input type="date" name="open_date" value="{{.Form.OpenDate}}" required>
+        </label>
+
+        <label>
+            Дата закрытия
+            <input type="date" name="close_date" value="{{.Form.CloseDate}}" required>
+        </label>
+
+        <label>
+            Начальный пробег, км
+            <input type="number" name="start_mileage" min="0" step="1"
+                   value="{{.Form.StartMileage}}" required>
+        </label>
+
+        <label>
+            Конечный пробег, км
+            <input type="number" name="end_mileage" min="0" step="1"
+                   value="{{.Form.EndMileage}}" required>
+        </label>
+
+        <label>
+            Топливо при выезде, л
+            <input type="number" name="fuel_start" min="0" step="0.1"
+                   value="{{.Form.FuelStart}}">
+        </label>
+
+        <label>
+            Топливо при возврате, л
+            <input type="number" name="fuel_end" min="0" step="0.1"
+                   value="{{.Form.FuelEnd}}">
+        </label>
+
+        <label>
+            Водитель
+            <select name="driver_id" required>
+                <option value="">Выберите водителя</option>
+                {{range .Drivers}}
+                <option value="{{.ID}}" {{if eq $.Form.DriverID (printf "%d" .ID)}}selected{{end}}>
+                {{.Name}}
+                </option>
+                {{end}}
+            </select>
+        </label>
+
+        <label>
+            Заправлено топлива, л
+            <input type="number" name="fuel_added" min="0" step="0.1"
+                   value="{{.Form.FuelAdded}}">
+            <span class="field-hint">
+                Если не указать или указать 0, смена будет помечена как «Без заправки»
+            </span>
+        </label>
+
+        <div class="form-section">
+            <div class="form-section-title">Дополнительно</div>
+
+            <label class="checkbox">
+                <input type="checkbox" name="no_fuel_reason_on"
+                       id="noFuelReasonOn" {{if .Form.NoFuelReasonOn}}checked{{end}}>
+                Добавить причину отсутствия заправки
+            </label>
+
+            <div id="noFuelReasonWrap">
+                <label>
+                    Причина отсутствия заправки
+                    <input type="text" name="no_fuel_reason" value="{{.Form.NoFuelReason}}"
+                           placeholder="Например: не было АЗС на маршруте / исчерпан лимит карты">
+                </label>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+            <a class="btn" href="/waybills">Отмена</a>
+        </div>
+    </form>
+</section>
+
+<script>
+    (function () {
+        var cb = document.getElementById('noFuelReasonOn');
+        var wrap = document.getElementById('noFuelReasonWrap');
+        if (!cb || !wrap) return;
+
+        function toggle() {
+            wrap.style.display = cb.checked ? '' : 'none';
+        }
+
+        cb.addEventListener('change', toggle);
+        toggle();
+    })();
+</script>
+{{end}}

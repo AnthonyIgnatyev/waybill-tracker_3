@@ -1,0 +1,44 @@
+{{define "title"}}Редактирование водителя — Учёт путевых листов{{end}}
+
+{{define "content"}}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Редактирование водителя</h1>
+        <div class="page-subtitle">
+            Данные водителя
+        </div>
+    </div>
+</div>
+
+{{if .Errors}}
+<div class="alert alert-danger">
+    <ul class="error-list">
+        {{range .Errors}}
+        <li>{{.}}</li>
+        {{end}}
+    </ul>
+</div>
+{{end}}
+
+<section class="card">
+    <form method="POST" action="/drivers/edit" class="form-grid">
+        <input type="hidden" name="id" value="{{.Driver.ID}}">
+
+        <label>
+            Фамилия
+            <input type="text" name="last_name" value="{{.Driver.LastName}}" required>
+        </label>
+
+        <label>
+            Номер прав
+            <input type="text" name="license_number" value="{{.Driver.LicenseNumber}}"
+                   placeholder="Например: 9988 776655">
+        </label>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+            <a class="btn" href="/drivers">Отмена</a>
+        </div>
+    </form>
+</section>
+{{end}}

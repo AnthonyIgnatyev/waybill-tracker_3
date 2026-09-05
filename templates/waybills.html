@@ -1,0 +1,217 @@
+{{define "title"}}Путевые листы — Учёт путевых листов{{end}}
+
+{{define "content"}}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Путевые листы</h1>
+        <div class="page-subtitle">
+            Учёт смен, пробега и расхода топлива
+        </div>
+    </div>
+
+    <div class="page-actions">
+        <a class="btn btn-primary" href="/waybill/add">Добавить путевой лист</a>
+    </div>
+</div>
+
+<section class="card">
+    <form method="GET" action="/waybills" class="filters">
+        <div class="filter-field">
+            <label>Поиск по номеру</label>
+            <input type="text" name="search" value="{{.Search}}"
+                   placeholder="Например: 300042">
+        </div>
+
+        <div class="filter-field">
+            <label>Автомобиль</label>
+            <select name="vehicle_id">
+                <option value="all">Все</option>
+                {{range .Vehicles}}
+                <option value="{{.ID}}" {{if eq $.VehicleFilter (printf "%d" .ID)}}selected{{end}}>
+                {{.Name}}
+                </option>
+                {{end}}
+            </select>
+        </div>
+
+        <div class="filter-field">
+            <label>С даты</label>
+            <input type="date" name="start_date" value="{{.StartDate}}">
+        </div>
+
+        <div class="filter-field">
+            <label>По дату</label>
+            <input type="date" name="end_date" value="{{.EndDate}}">
+        </div>
+
+        <div class="filter-field">
+            <label>Сортировка</label>
+            <select name="sort">
+                <option value="date_desc" {{if eq $.Sort "date_desc"}}selected{{end}}>
+                Сначала новые
+                </option>
+                <option value="date_asc" {{if eq $.Sort "date_asc"}}selected{{end}}>
+                Сначала старые
+                </option>
+                <option value="number_desc" {{if eq $.Sort "number_desc"}}selected{{end}}>
+                № листа: по убыванию
+                </option>
+                <option value="number_asc" {{if eq $.Sort "number_asc"}}selected{{end}}>
+                № листа: по возрастанию
+                </option>
+                <option value="mileage_desc" {{if eq $.Sort "mileage_desc"}}selected{{end}}>
+                Пробег: по убыванию
+                </option>
+                <option value="mileage_asc" {{if eq $.Sort "mileage_asc"}}selected{{end}}>
+                Пробег: по возрастанию
+                </option>
+            </select>
+        </div>
+
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">Применить</button>
+            <a class="btn" href="/waybills">Сбросить</a>
+        </div>
+    </form>
+</section>
+
+<section class="card">
+    <div class="table-wrap">
+        <table>
+            <thead>
+            <tr>
+                <th>№ листа</th>
+                <th>Авто</th>
+                <th>Водитель</th>
+                <th>Период</th>
+                <th>Пробег</th>
+                <th>Расход</th>
+                <th>Статус</th>
+                <th>Действия</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            {{range .Waybills}}
+            <tr class="{{if or .MileageMismatch .Overconsumption}}row-danger{{else if .NoFuelFlag}}row-warning{{end}}">
+                <td><a href="/waybills/edit?id={{.ID}}">{{.WaybillNumber}}</a></td>
+                <td>{{.LicensePlate}}</td>
+                <td>{{.DriverName}}</td>
+                <td>
+                    {{.OpenDate}} — {{.CloseDate}}
+                </td>
+                <td>
+                    {{.Mileage}} км
+                    <div class="muted">{{.StartMileage}} → {{.EndMileage}}</div>
+                </td>
+                <td>
+                    {{if gt .ConsumptionPer100 0.0}}
+                    {{printf "%.1f" .ConsumptionPer100}} л/100км
+                    {{else}}
+                    <span class="muted">—</span>
+                    {{end}}
+                </td>
+                <td>
+                    {{if .MileageMismatch}}
+                    <span class="chip chip-danger">Разрыв пробега</span>
+                    {{else if .Overconsumption}}
+                    <span class="chip chip-danger">Перерасход</span>
+                    {{else if .NoFuelFlag}}
+                    <span class="chip chip-warning">Без заправки</span>
+                    {{else}}
+                    <span class="chip chip-ok">Норма</span>
+                    {{end}}
+                </td>
+                <td>
+                    <a class="btn btn-small" href="/waybills/edit?id={{.ID}}">Изменить</a>
+                </td>
+            </tr>
+            {{if .Notes}}
+            <tr class="row-note">
+                <td colspan="8">
+                    <div class="row-note-text">
+                        <span class="muted">Замечания:</span>
+                        {{.Notes}}
+                    </div>
+                </td>
+            </tr>
+            {{end}}
+            {{else}}
+            <tr>
+                <td colspan="8">
+                    <div class="empty-state">
+                        Записей не найдено. Попробуйте изменить параметры поиска.
+                    </div>
+                </td>
+            </tr>
+            {{end}}
+            </tbody>
+        </table>
+    </div>
+
+    {{if and .Pagination (gt .Pagination.TotalItems 0)}}
+    <div class="pagination">
+        <div class="pagination-info">
+            Показано {{.Pagination.From}}–{{.Pagination.To}}
+            из {{.Pagination.TotalItems}}
+            · Страница {{.Pagination.Page}} из {{.Pagination.TotalPages}}
+        </div>
+
+        <div class="pagination-controls">
+            {{if .Pagination.HasPrev}}
+            <a class="btn btn-small" href="{{.Pagination.PrevURL}}">Назад</a>
+            {{else}}
+            <span class="btn btn-small btn-disabled">Назад</span>
+            {{end}}
+
+            {{if .Pagination.HasNext}}
+            <a class="btn btn-small" href="{{.Pagination.NextURL}}">Вперёд</a>
+            {{else}}
+            <span class="btn btn-small btn-disabled">Вперёд</span>
+            {{end}}
+        </div>
+    </div>
+    {{end}}
+</section>
+<script>
+    (function () {
+        var btn = document.getElementById('exportWaybillsBtn');
+        if (!btn) return;
+
+        var form = btn.closest('form');
+        if (!form) return;
+
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            var params = new URLSearchParams();
+
+            var search = form.querySelector('[name="search"]');
+            var vehicle = form.querySelector('[name="vehicle_id"]');
+            var start = form.querySelector('[name="start_date"]');
+            var end = form.querySelector('[name="end_date"]');
+
+            if (search && search.value.trim()) {
+                params.set('search', search.value.trim());
+            }
+            if (vehicle && vehicle.value && vehicle.value !== 'all') {
+                params.set('vehicle_id', vehicle.value);
+            }
+            if (start && start.value) {
+                params.set('start_date', start.value);
+            }
+            if (end && end.value) {
+                params.set('end_date', end.value);
+            }
+
+            var url = '/export/waybills';
+            var qs = params.toString();
+            if (qs) {
+                url += '?' + qs;
+            }
+
+            window.location.href = url;
+        });
+    })();
+</script>
+{{end}}

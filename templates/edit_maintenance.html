@@ -1,0 +1,158 @@
+{{define "title"}}Редактирование записи о ТО — Учёт путевых листов{{end}}
+
+{{define "content"}}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Редактирование записи о ТО</h1>
+        <div class="page-subtitle">
+            Исправление данных технического обслуживания
+        </div>
+    </div>
+</div>
+
+{{if .Errors}}
+<div class="alert alert-danger">
+    <ul class="error-list">
+        {{range .Errors}}
+        <li>{{.}}</li>
+        {{end}}
+    </ul>
+</div>
+{{end}}
+
+<section class="card">
+    <form method="POST" action="/maintenance/edit" class="form-grid" enctype="multipart/form-data">
+        <input type="hidden" name="id" value="{{.Form.ID}}">
+
+        <label>
+            Номер акта выполненных работ
+            <input type="text" name="act_number" value="{{.Form.ActNumber}}" required>
+        </label>
+
+        <label>
+            Автомобиль
+            <select name="vehicle_id" required>
+                <option value="">Выберите автомобиль</option>
+                {{range .Vehicles}}
+                <option value="{{.ID}}" {{if eq $.Form.VehicleID (printf "%d" .ID)}}selected{{end}}>
+                {{.Name}}
+                </option>
+                {{end}}
+            </select>
+        </label>
+
+        <label>
+            Дата проведения ТО
+            <input type="date" name="service_date" value="{{.Form.ServiceDate}}" required>
+        </label>
+
+        <label>
+            Пробег на момент ТО, км
+            <input type="number" name="mileage" min="0" step="1"
+                   value="{{.Form.Mileage}}" required>
+        </label>
+
+        <label>
+            Название сервиса
+            <input type="text" name="service_name" value="{{.Form.ServiceName}}">
+        </label>
+
+        <label>
+            Стоимость работ, ₽
+            <input type="number" name="cost" min="0" step="0.01"
+                   value="{{.Form.Cost}}">
+        </label>
+
+        <div class="form-section">
+            <div class="form-section-title">Что было заменено / проверено</div>
+
+            <div class="checklist">
+                <label class="checkbox">
+                    <input type="checkbox" name="oil" {{if .Form.Oil}}checked{{end}}>
+                    Масло ДВС
+                </label>
+
+                <label class="checkbox">
+                    <input type="checkbox" name="oil_filter" {{if .Form.OilFilter}}checked{{end}}>
+                    Фильтр масляный
+                </label>
+
+                <label class="checkbox">
+                    <input type="checkbox" name="air_filter" {{if .Form.AirFilter}}checked{{end}}>
+                    Фильтр воздушный
+                </label>
+
+                <label class="checkbox">
+                    <input type="checkbox" name="front_pads" {{if .Form.FrontPads}}checked{{end}}>
+                    Тормозные колодки передние
+                </label>
+
+                <label class="checkbox">
+                    <input type="checkbox" name="rear_pads" {{if .Form.RearPads}}checked{{end}}>
+                    Тормозные колодки задние
+                </label>
+
+                <label class="checkbox">
+                    <input type="checkbox" name="spark_plugs" {{if .Form.SparkPlugs}}checked{{end}}>
+                    Свечи зажигания
+                </label>
+
+                <label class="checkbox">
+                    <input type="checkbox" name="timing_belt" {{if .Form.TimingBelt}}checked{{end}}>
+                    Ремень ГРМ
+                </label>
+
+                <label class="checkbox">
+                    <input type="checkbox" name="timing_chain" {{if .Form.TimingChain}}checked{{end}}>
+                    Цепь ГРМ
+                </label>
+            </div>
+        </div>
+
+        <label>
+            Другие работы
+            <input type="text" name="other_work" value="{{.Form.OtherWork}}">
+        </label>
+
+        <label>
+            Напомнить через, км
+            <input type="number" name="other_remind_km" min="0" step="500"
+                   value="{{.Form.OtherRemindKm}}">
+            <span class="field-hint">0 — не напоминать</span>
+        </label>
+
+        <div class="form-section">
+            <div class="form-section-title">Акт выполненных работ</div>
+
+            {{if .Maintenance.Attachment}}
+            <div class="row-actions-inline" style="margin-bottom: 10px;">
+                <a class="btn btn-small" href="/maintenance/file?id={{.Maintenance.ID}}" target="_blank">
+                    Просмотреть текущий акт
+                </a>
+                <a class="btn btn-small" href="/maintenance/file?id={{.Maintenance.ID}}&download=1">
+                    Скачать
+                </a>
+            </div>
+
+            <label class="checkbox">
+                <input type="checkbox" name="remove_attachment">
+                Удалить прикреплённый файл
+            </label>
+            {{end}}
+
+            <label>
+                Заменить файл (PDF)
+                <input type="file" name="attachment" accept="application/pdf">
+                <span class="field-hint">
+                    Если выбрать файл, он заменит текущий. Если не выбирать — текущий останется.
+                </span>
+            </label>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+            <a class="btn" href="/maintenance">Отмена</a>
+        </div>
+    </form>
+</section>
+{{end}}

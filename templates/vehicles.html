@@ -1,0 +1,123 @@
+{{define "title"}}Автомобили — Учёт путевых листов{{end}}
+
+{{define "content"}}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Автомобили</h1>
+        <div class="page-subtitle">
+            Активный автопарк и списанные автомобили
+        </div>
+    </div>
+
+    <div class="page-actions">
+        <a class="btn btn-primary" href="/vehicles/add">Добавить автомобиль</a>
+    </div>
+</div>
+
+{{if eq .Error "no_reason"}}
+<div class="alert alert-danger">
+    Необходимо указать причину списания автомобиля.
+</div>
+{{end}}
+
+<section class="card">
+    <div class="card-head">
+        <h2 class="card-title">Активные автомобили</h2>
+        <span class="chip">{{len .ActiveVehicles}}</span>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+            <tr>
+                <th>Госномер</th>
+                <th>Марка / модель</th>
+                <th>Средний расход</th>
+                <th>Объём бака</th>
+                <th>Текущий пробег</th>
+                <th>Действия</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            {{range .ActiveVehicles}}
+            <tr>
+                <td>{{.LicensePlate}}</td>
+                <td>{{.BrandModel}}</td>
+                <td>{{.AvgConsumption}} л/100км</td>
+                <td>{{.TankCapacity}} л</td>
+                <td>{{.CurrentMileage}} км</td>
+                <td>
+                    <div class="row-actions">
+                        <a class="btn btn-small" href="/vehicles/edit?license_plate={{.LicensePlate}}">
+                            Изменить
+                        </a>
+
+                        <form method="POST" action="/vehicles/delete" class="inline-form">
+                            <input type="hidden" name="license_plate" value="{{.LicensePlate}}">
+
+                            <select name="deletion_reason" required>
+                                <option value="">Причина списания</option>
+                                <option value="Продан">Продан</option>
+                                <option value="ДТП (авария)">ДТП (авария)</option>
+                                <option value="Не используется">Не используется</option>
+                                <option value="Списан (прочие причины)">Списан (прочие причины)</option>
+                            </select>
+
+                            <button type="submit" class="btn btn-danger btn-small">Списать</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {{else}}
+            <tr>
+                <td colspan="6">
+                    <div class="empty-state">Нет активных автомобилей</div>
+                </td>
+            </tr>
+            {{end}}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+{{if .DeletedVehicles}}
+<section class="card">
+    <div class="card-head">
+        <h2 class="card-title">Списанные автомобили</h2>
+        <span class="chip">{{len .DeletedVehicles}}</span>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+            <tr>
+                <th>Госномер</th>
+                <th>Марка / модель</th>
+                <th>Причина списания</th>
+                <th>Дата</th>
+                <th>Действия</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            {{range .DeletedVehicles}}
+            <tr>
+                <td>{{.LicensePlate}}</td>
+                <td>{{.BrandModel}}</td>
+                <td>{{.DeletionReason}}</td>
+                <td>{{.DeletionDate}}</td>
+                <td>
+                    <form method="POST" action="/vehicles/restore" class="inline-form">
+                        <input type="hidden" name="license_plate" value="{{.LicensePlate}}">
+                        <button type="submit" class="btn btn-small">Восстановить</button>
+                    </form>
+                </td>
+            </tr>
+            {{end}}
+            </tbody>
+        </table>
+    </div>
+</section>
+{{end}}
+{{end}}

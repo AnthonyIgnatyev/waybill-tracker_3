@@ -1,0 +1,212 @@
+{{define "title"}}Дашборд — Учёт путевых листов{{end}}
+
+{{define "content"}}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Дашборд</h1>
+        <div class="page-subtitle">Сводка по автопарку за {{.PeriodLabel}}</div>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-primary" href="/waybill/add">Новый путевой лист</a>
+        <a class="btn" href="/maintenance/add">Записать ТО</a>
+    </div>
+</div>
+
+<!-- 1. Карточки статистики за месяц -->
+<section class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">Путевых листов за месяц</div>
+        <div class="stat-value">{{.Stats.MonthWaybills}}</div>
+        <div class="stat-sub">С замечаниями: {{.Stats.ErrorWaybills}}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">Автомобили за месяц</div>
+        <div class="stat-value">{{.Stats.ActiveVehicles}}</div>
+        <div class="stat-sub">Всего в парке: {{.Stats.TotalVehicles}}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">Пробег за месяц</div>
+        <div class="stat-value">{{.Stats.MonthMileage}} км</div>
+        <div class="stat-sub">Топливо: {{printf "%.1f" .Stats.MonthFuel}} л</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">Затраты на ТО за месяц</div>
+        <div class="stat-value">{{printf "%.0f" .Stats.MonthMaintCost}} ₽</div>
+    </div>
+</section>
+
+<!-- 2. ТО и быстрые действия (подняты выше) -->
+<!-- 2. ТО и быстрые действия -->
+<div class="dashboard-grid">
+    <section class="card">
+        <h2 class="card-title">
+            Приближающееся ТО
+            {{if .ToUrgentCount}}<span class="badge badge-danger">{{.ToUrgentCount}}</span>{{end}}
+        </h2>
+
+        {{if .ToProgress}}
+        <div class="to-list">
+            {{range .ToProgress}}
+            <div class="to-item to-item-{{.Level}}">
+                <div class="to-head">
+                    <div class="to-car">
+                        {{.VehicleModel}} <span class="muted">({{.VehiclePlate}})</span>
+                        <span class="muted">· {{.ItemName}}</span>
+                    </div>
+                    <div class="to-remaining">{{.StatusLabel}}</div>
+                </div>
+
+                <div class="to-bar">
+                    <span class="to-left">{{.LastMileage}} км</span>
+
+                    <div class="to-track">
+                        <div class="to-fill to-fill-{{.Level}}" style="width: {{.Percent}}%;"></div>
+                    </div>
+
+                    <span class="to-right">{{.NextMileage}} км</span>
+                </div>
+            </div>
+            {{end}}
+        </div>
+        {{else}}
+        <div class="empty-state">Активных напоминаний нет.</div>
+        {{end}}
+    </section>
+
+    <section class="card">
+        <h2 class="card-title">Быстрые действия</h2>
+
+        <div class="quick-actions">
+            <a class="qa" href="/waybill/add">
+                <span class="qa-ico qa-ico-primary">+</span>
+                <span class="qa-text">
+                    <span class="qa-title">Новый путевой лист</span>
+                    <span class="qa-sub">Оформить смену</span>
+                </span>
+            </a>
+
+            <a class="qa" href="/maintenance/add">
+                <span class="qa-ico">🔧</span>
+                <span class="qa-text">
+                    <span class="qa-title">Запись о ТО</span>
+                    <span class="qa-sub">Добавить обслуживание</span>
+                </span>
+            </a>
+
+            <a class="qa" href="/vehicles/add">
+                <span class="qa-ico">🚗</span>
+                <span class="qa-text">
+                    <span class="qa-title">Добавить автомобиль</span>
+                    <span class="qa-sub">Новая единица в парке</span>
+                </span>
+            </a>
+
+            <a class="qa" href="/drivers">
+                <span class="qa-ico">👤</span>
+                <span class="qa-text">
+                    <span class="qa-title">Водители</span>
+                    <span class="qa-sub">Список и управление</span>
+                </span>
+            </a>
+
+            <a class="qa" href="/reports">
+                <span class="qa-ico">📊</span>
+                <span class="qa-text">
+                    <span class="qa-title">Отчёты</span>
+                    <span class="qa-sub">Статистика за период</span>
+                </span>
+            </a>
+
+            <a class="qa" href="/waybills">
+                <span class="qa-ico">📋</span>
+                <span class="qa-text">
+                    <span class="qa-title">Все путевые листы</span>
+                    <span class="qa-sub">Журнал смен</span>
+                </span>
+            </a>
+        </div>
+    </section>
+</div>
+
+<!-- 3. Требует внимания (опущен ниже) -->
+<section class="card">
+    <h2 class="card-title">Требует внимания</h2>
+
+    {{if .Attention}}
+    <div class="attention-list">
+        {{range .Attention}}
+        <a class="attention-item attention-{{.Level}}" href="{{.Link}}">
+            <div class="attention-main">
+                <span class="attention-dot"></span>
+                <div class="attention-text">
+                    <div class="attention-title">{{.Title}}</div>
+                    <div class="attention-sub">{{.Subtitle}}</div>
+                </div>
+            </div>
+            <span class="attention-arrow">→</span>
+        </a>
+        {{end}}
+    </div>
+    {{else}}
+    <div class="empty-state">
+        На текущий момент нет элементов, требующих внимания.
+    </div>
+    {{end}}
+</section>
+
+<!-- 4. Последние путевые листы -->
+<section class="card">
+    <div class="card-head">
+        <h2 class="card-title">Последние путевые листы</h2>
+        <a class="btn btn-small" href="/waybills">Открыть все</a>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+            <tr>
+                <th>№ листа</th>
+                <th>Дата</th>
+                <th>Автомобиль</th>
+                <th>Водитель</th>
+                <th>Пробег</th>
+                <th>Расход</th>
+                <th>Статус</th>
+            </tr>
+            </thead>
+            <tbody>
+            {{range .RecentWaybills}}
+            <tr>
+                <td>
+                    <a href="/waybills/edit?id={{.ID}}">№ {{.Number}}</a>
+                </td>
+                <td>{{.OpenDate}}</td>
+                <td>{{.LicensePlate}}</td>
+                <td>{{.DriverName}}</td>
+                <td>{{.Mileage}} км</td>
+                <td>
+                    {{if gt .Consumption 0.0}}
+                    {{printf "%.1f" .Consumption}} л/100км
+                    {{else}}
+                    <span class="muted">—</span>
+                    {{end}}
+                </td>
+                <td>
+                    <span class="chip chip-{{.Status}}">{{.StatusLabel}}</span>
+                </td>
+            </tr>
+            {{else}}
+            <tr>
+                <td colspan="7">
+                    <div class="empty-state">Путевых листов пока нет.</div>
+                </td>
+            </tr>
+            {{end}}
+            </tbody>
+        </table>
+    </div>
+</section>
+{{end}}

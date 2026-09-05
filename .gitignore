@@ -1,0 +1,32 @@
+# ---------- Базы данных ----------
+*.db
+*.db-shm
+*.db-wal
+
+# ---------- Загруженные акты (PDF) ----------
+/uploads/
+
+# ---------- Резервные копии ----------
+/backups/
+
+# ---------- Скомпилированные файлы ----------
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+/waybill-tracker
+/waybill-tracker.exe
+
+# ---------- IDE ----------
+.idea/
+
+# ---------- Go workspace ----------
+go.work
+go.work.sum
+
+# ---------- ОС ----------
+.DS_Store
+Thumbs.db
