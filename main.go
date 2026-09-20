@@ -45,6 +45,7 @@ func main() {
 	mux.HandleFunc("/waybills", handlers.WaybillsHandler)
 	mux.HandleFunc("/waybill/add", handlers.AddWaybillHandler)
 	mux.HandleFunc("/waybills/edit", handlers.EditWaybillHandler)
+	mux.HandleFunc("/waybills/delete", handlers.DeleteWaybillHandler)
 
 	mux.HandleFunc("/drivers", handlers.DriversHandler)
 	mux.HandleFunc("/drivers/edit", handlers.EditDriverHandler)

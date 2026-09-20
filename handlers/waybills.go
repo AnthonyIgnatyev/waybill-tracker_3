@@ -656,3 +656,74 @@ func RecalculateAllVehicles() error {
 
 	return lastErr
 }
+
+// DeleteWaybillHandler удаляет путевой лист (безвозвратно) и откатывает пробег авто.
+func DeleteWaybillHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Redirect(w, r, "/waybills", http.StatusSeeOther)
+		return
+	}
+
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Ошибка формы", http.StatusBadRequest)
+		return
+	}
+
+	id, ok := parseIntValue(r.FormValue("id"))
+	if !ok || id <= 0 {
+		http.Error(w, "Не указан ID путевого листа", http.StatusBadRequest)
+		return
+	}
+
+	var vehicleID, endMileage int
+	if err := DB.QueryRow(`SELECT vehicle_id, end_mileage FROM waybills WHERE id = ?`, id).
+		Scan(&vehicleID, &endMileage); err != nil {
+		http.Error(w, "Путевой лист не найден", http.StatusNotFound)
+		return
+	}
+
+	if err := execSQL(`DELETE FROM waybills WHERE id = ?`, id); err != nil {
+		http.Error(w, "Не удалось удалить путевой лист", http.StatusInternalServerError)
+		return
+	}
+
+	rollbackVehicleMileage(vehicleID, endMileage)
+
+	if err := RecalculateMileageMismatch(vehicleID); err != nil {
+		log.Printf("⚠️ RecalculateMileageMismatch после удаления: %v", err)
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/waybills?vehicle_id=%d", vehicleID), http.StatusSeeOther)
+}
+
+// rollbackVehicleMileage откатывает текущий пробег автомобиля после удаления
+// путевого листа. Пересчёт выполняется только если удалённый лист был источником
+// максимального пробега; иначе пробег не трогаем.
+func rollbackVehicleMileage(vehicleID, deletedEnd int) {
+	var current int
+	if err := DB.QueryRow(`SELECT current_mileage FROM vehicles WHERE id = ?`, vehicleID).Scan(&current); err != nil {
+		log.Printf("⚠️ rollbackVehicleMileage: чтение пробега: %v", err)
+		return
+	}
+
+	// Удалённый лист не определял максимальный пробег — откатывать нечего
+	if deletedEnd < current {
+		return
+	}
+
+	var maxWaybill, maxMaint sql.NullInt64
+	_ = DB.QueryRow(`SELECT MAX(end_mileage) FROM waybills WHERE vehicle_id = ?`, vehicleID).Scan(&maxWaybill)
+	_ = DB.QueryRow(`SELECT MAX(mileage) FROM maintenance_logs WHERE vehicle_id = ?`, vehicleID).Scan(&maxMaint)
+
+	newCurrent := 0
+	if maxWaybill.Valid {
+		newCurrent = int(maxWaybill.Int64)
+	}
+	if maxMaint.Valid && int(maxMaint.Int64) > newCurrent {
+		newCurrent = int(maxMaint.Int64)
+	}
+
+	if err := execSQL(`UPDATE vehicles SET current_mileage = ? WHERE id = ?`, newCurrent, vehicleID); err != nil {
+		log.Printf("⚠️ rollbackVehicleMileage: %v", err)
+	}
+}

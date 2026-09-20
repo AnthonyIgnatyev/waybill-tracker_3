@@ -678,13 +678,11 @@ td .chip {
     border: 1px solid transparent;
 }
 
-/* Жёлтая зона — как «перерасход» */
 .to-item-warning {
     background: var(--warning-bg);
     border-color: var(--warning-border);
 }
 
-/* Красная зона — как «разрыв пробега» */
 .to-item-danger {
     background: var(--danger-bg);
     border-color: var(--danger-border);
@@ -736,13 +734,13 @@ td .chip {
     height: 10px;
     background: #e5eaf3;
     border-radius: 999px;
-    overflow: hidden; /* полоска не выходит за границы */
+    overflow: hidden;
 }
 
 .to-fill {
     height: 100%;
     border-radius: 999px;
-    background: var(--primary); /* синяя, как активные кнопки */
+    background: var(--primary);
     transition: width 0.3s ease;
 }
 
@@ -752,4 +750,9 @@ td .chip {
 
 .to-fill-danger {
     background: var(--danger);
+}
+
+/* Кнопка удаления путевого листа — прижимаем вправо в строке действий */
+.form-actions .delete-form {
+    margin-left: auto;
 }
