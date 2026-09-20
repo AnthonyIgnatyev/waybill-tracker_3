@@ -17,6 +17,12 @@
 <section class="card">
     <form method="GET" action="/maintenance" class="filters">
         <div class="filter-field">
+            <label>Поиск по работам</label>
+            <input type="text" name="search" value="{{.Search}}"
+                   placeholder="Например: масло, ступичный, ремень">
+        </div>
+
+        <div class="filter-field">
             <label>Автомобиль</label>
             <select name="vehicle_id">
                 <option value="all">Все</option>
@@ -58,6 +64,7 @@
         </div>
     </form>
 </section>
+
 
 {{if .Summary}}
 <section class="card">

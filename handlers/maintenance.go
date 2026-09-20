@@ -148,16 +148,90 @@ func renderEditMaintenancePage(w http.ResponseWriter, errs []string, form Mainte
 	})
 }
 
+// matchSearchKeywords возвращает SQL-условия для поиска по галочкам работ.
+// Например, если в поиске есть "масло" — добавит "m.oil_changed=1",
+// если "колодки" — добавит колодки, если "передние колодки" — только передние.
+func matchSearchKeywords(search string) []string {
+	s := strings.ToLower(search)
+	var cols []string
+
+	if strings.Contains(s, "масл") {
+		if strings.Contains(s, "маслян") {
+			cols = append(cols, "m.oil_filter_changed=1")
+		} else {
+			cols = append(cols, "m.oil_changed=1")
+		}
+	}
+	if strings.Contains(s, "воздушн") {
+		cols = append(cols, "m.air_filter_changed=1")
+	}
+	if strings.Contains(s, "свеч") {
+		cols = append(cols, "m.spark_plugs_changed=1")
+	}
+	if strings.Contains(s, "ремень") {
+		cols = append(cols, "m.timing_belt_changed=1")
+	}
+	if strings.Contains(s, "цепь") || strings.Contains(s, "цепи") {
+		cols = append(cols, "m.timing_chain_changed=1")
+	}
+
+	hasFront := strings.Contains(s, "передн")
+	hasRear := strings.Contains(s, "задн")
+	if strings.Contains(s, "колодк") || strings.Contains(s, "тормоз") {
+		if hasFront && !hasRear {
+			cols = append(cols, "m.front_pads_changed=1")
+		} else if hasRear && !hasFront {
+			cols = append(cols, "m.rear_pads_changed=1")
+		} else {
+			cols = append(cols, "m.front_pads_changed=1")
+			cols = append(cols, "m.rear_pads_changed=1")
+		}
+	}
+
+	return cols
+}
+
 func MaintenanceHandler(w http.ResponseWriter, r *http.Request) {
 	vehicleFilter := r.FormValue("vehicle_id")
 	vehicleIDFilter := parseOptInt(vehicleFilter, 0)
 
+	search := strings.TrimSpace(r.FormValue("search"))
+
 	where := ""
 	var args []interface{}
 
+	// Условие по автомобилю
+	vehicleCond := ""
 	if vehicleIDFilter > 0 {
-		where = " WHERE m.vehicle_id = ?"
+		vehicleCond = "m.vehicle_id = ?"
 		args = append(args, vehicleIDFilter)
+	}
+
+	// Условие по поиску
+	searchCond := ""
+	if search != "" {
+		textCond := `(m.act_number LIKE '%' || ? || '%' OR m.service_name LIKE '%' || ? || '%' OR m.other_work LIKE '%' || ? || '%')`
+		checkboxConds := matchSearchKeywords(search)
+
+		if len(checkboxConds) > 0 {
+			searchCond = "(" + textCond + " OR " + strings.Join(checkboxConds, " OR ") + ")"
+			args = append(args, search, search, search)
+		} else {
+			searchCond = textCond
+			args = append(args, search, search, search)
+		}
+	}
+
+	// Собираем WHERE
+	var conds []string
+	if vehicleCond != "" {
+		conds = append(conds, vehicleCond)
+	}
+	if searchCond != "" {
+		conds = append(conds, searchCond)
+	}
+	if len(conds) > 0 {
+		where = " WHERE " + strings.Join(conds, " AND ")
 	}
 
 	var total int
@@ -282,6 +356,7 @@ func MaintenanceHandler(w http.ResponseWriter, r *http.Request) {
 		"Logs":          logs,
 		"Vehicles":      activeVehicles(),
 		"VehicleFilter": vehicleFilter,
+		"Search":        search,
 		"Summary":       summary,
 		"Sort":          sort,
 		"Pagination":    pagination,
