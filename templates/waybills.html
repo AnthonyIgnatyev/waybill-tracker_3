@@ -106,7 +106,7 @@
                 </td>
                 <td>
                     {{if gt .ConsumptionPer100 0.0}}
-                    {{printf "%.1f" .ConsumptionPer100}} л/100км
+                    {{printf "%.2f" .ConsumptionPer100}} л/100км
                     {{else}}
                     <span class="muted">—</span>
                     {{end}}

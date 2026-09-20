@@ -146,17 +146,17 @@ func ExportWaybillsCSV(w http.ResponseWriter, r *http.Request) {
 
 		consumptionStr := ""
 		if row.ConsumptionPer100 > 0 {
-			consumptionStr = strconv.FormatFloat(row.ConsumptionPer100, 'f', 1, 64)
+			consumptionStr = strconv.FormatFloat(row.ConsumptionPer100, 'f', 2, 64)
 		}
 
 		fuelStartStr := ""
 		if row.FuelStart > 0 {
-			fuelStartStr = strconv.FormatFloat(row.FuelStart, 'f', 1, 64)
+			fuelStartStr = strconv.FormatFloat(row.FuelStart, 'f', 2, 64)
 		}
 
 		fuelEndStr := ""
 		if row.FuelEnd > 0 {
-			fuelEndStr = strconv.FormatFloat(row.FuelEnd, 'f', 1, 64)
+			fuelEndStr = strconv.FormatFloat(row.FuelEnd, 'f', 2, 64)
 		}
 
 		noFuel := ""
@@ -185,7 +185,7 @@ func ExportWaybillsCSV(w http.ResponseWriter, r *http.Request) {
 			strconv.Itoa(row.Mileage),
 			fuelStartStr,
 			fuelEndStr,
-			strconv.FormatFloat(row.FuelAdded, 'f', 1, 64),
+			strconv.FormatFloat(row.FuelAdded, 'f', 2, 64),
 			consumptionStr,
 			noFuel,
 			row.NoFuelReason,

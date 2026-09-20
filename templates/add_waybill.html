@@ -63,13 +63,13 @@
 
         <label>
             Топливо при выезде, л
-            <input type="number" name="fuel_start" min="0" step="0.1"
+            <input type="number" name="fuel_start" min="0" step="0.001"
                    value="{{.Form.FuelStart}}">
         </label>
 
         <label>
             Топливо при возврате, л
-            <input type="number" name="fuel_end" min="0" step="0.1"
+            <input type="number" name="fuel_end" min="0" step="0.001"
                    value="{{.Form.FuelEnd}}">
         </label>
 
@@ -87,7 +87,7 @@
 
         <label>
             Заправлено топлива, л
-            <input type="number" name="fuel_added" min="0" step="0.1"
+            <input type="number" name="fuel_added" min="0" step="0.001"
                    value="{{.Form.FuelAdded}}">
             <span class="field-hint">
                 Если не указать или указать 0, смена будет помечена как «Без заправки»
